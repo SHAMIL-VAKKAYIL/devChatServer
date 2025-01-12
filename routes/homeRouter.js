@@ -1,11 +1,19 @@
-const router=require('express').Router()
+const router = require('express').Router()
+const userSchema = require('../models/userSchema')
 
-router.get('/data',(req,res)=>{
-    res.json([
-        {id:1,name:'shamil',age:21},
-        {id:2,name:'salman',age:22},
-    ])
+router.get('/users', async (req, res) => {
+    console.log('heloo');
+    
+    try {
+        // const { user } = req.body
+        const users = await userSchema.find()
+        console.log(users);
+        console.log('users');
+        
+        res.status(200).json({users})
+    } catch (error) {
+    }
 })
 
 
-module.exports=router
+module.exports = router

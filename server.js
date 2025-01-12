@@ -1,24 +1,31 @@
-const express = require('express');
-const http = require('http')
-const { Server } = require('socket.io')
-const cors = require('cors');
-const mongoose = require('mongoose');
-require('dotenv').config()
+import express from 'express'
+import http from 'http'
+import { Server } from 'socket.io';
+import cors from 'cors'
+import mongoose from 'mongoose';
+import dotenv from 'dotenv'
 
-//! routers
-const authRouter = require('./routes/authRouter')
-const chatRouter = require('./routes/chatRouter')
-const homeRouter = require('./routes/homeRouter')
+import { connectDB } from './lib/db.js';
+import cookieParser from 'cookie-parser';
 
+// //! routers
+import authRoutes from './routes/authRouter.js'
+import messageRoutes from './routes/chatRouter.js'
+// const chatRouter = require('./routes/chatRouter')
+// const homeRouter = require('./routes/homeRouter')
+dotenv.config()
 const app = express();
 const server = http.createServer(app)
 
-const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST"]
-    }
-})
+
+
+
+// const io = new Server(server, {
+//     cors: {
+//         origin: "http://localhost:5173",
+//         methods: ["GET", "POST"]
+//     }
+// })
 
 const mongoURL = process.env.MONGO_URL
 
@@ -32,32 +39,39 @@ mongoose.connect(mongoURL)
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser())
 
 
-const PORT = process.env.PORT || 3000;
-
-
-
-app.use('/auth', authRouter)
-app.use('/chat', chatRouter)
-app.use('/home', homeRouter)
+app.use('/api/auth', authRoutes)
+app.use('/api/message', messageRoutes)
 
 
 
-io.on('connection', (socket) => {
-    console.log(`user connected: ${socket.id}`);
-    socket.on('message', (data) => {
-        console.log(data);
+const PORT = process.env.PORT;
 
-        io.emit('message', data)
-    })
 
-    //! disconnect
-    socket.on('disconnect', () => {
-        console.log(`user disconnected: ${socket.id}`);
-    })
-})
+
+// app.use('/auth', authRouter)
+// app.use('/chat', chatRouter)
+// app.use('/home', homeRouter)
+
+
+
+// io.on('connection', (socket) => {
+//     console.log(`user connected: ${socket.id}`);
+//     socket.on('message', (data) => {
+//         console.log(data);
+
+//         io.emit('message', data)
+//     })
+
+//     //! disconnect
+//     socket.on('disconnect', () => {
+//         console.log(`user disconnected: ${socket.id}`);
+//     })
+// })
 
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+    connectDB
 })
