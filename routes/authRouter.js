@@ -1,5 +1,5 @@
 import express from 'express'
-import { checkAuth, login, logout, signup, updateProfile } from '../controllers/authController.js'
+import { checkAuth,  login,  logout, signup, updateProfile } from '../controllers/authController.js'
 import { protectRoute } from '../middlewares/auth.middleware.js'
 // import  userSchema from '../models/userSchema.js'
 
