@@ -67,16 +67,35 @@ export const logout = (req, res) => {
 
 
 export const updateProfile = async (req, res) => {
+    console.log(req.body);
+
     try {
-        const { profilepic } = req.body
+        const { profilePic, email, fullname } = req.body
+
+        const updates = {}
+
         const userId = req.user._id
 
-        if (!profilepic) {
-            return res.status(400).json({ message: 'Profile picture is required' })
+        if (profilePic) {
+            const uploadRes = await cloudinary.uploader.upload(profilePic)
+            updates.profilePic = uploadRes.secure_url
         }
-        const uploadRes = await cloudinary.uploader.upload(profilepic)
-        const updatedUser = await User.findByIdAndUpdate(userId, { profilePic: uploadRes.secure_url }, { new: true })
-        res.status(200).json(updatedUser)
+
+        if (email) updates.email = email
+        if (fullname) updates.fullname = fullname
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updates, { new: true })
+
+        res.status(200).json({
+            id: updatedUser._id,
+            fullname: updatedUser.fullname,
+            email: updatedUser.email,
+            profilePic: updatedUser.profilePic
+        });
+
+        if (!updatedUser) {
+            return res.status(404).json('User not found');
+        }
 
     } catch (error) {
         console.log("Error in update profile process", error.message);

@@ -9,7 +9,6 @@ export const protectRoute = async (req, res, next) => {
             return res.status(401).json({ msg: "No token, authorization denied" })
         }
 
-
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
         if (!decoded) {
@@ -21,7 +20,6 @@ export const protectRoute = async (req, res, next) => {
             return res.status(401).json({ msg: "User not found" })
         }
         req.user = user
-
         next()
 
     } catch (error) {
