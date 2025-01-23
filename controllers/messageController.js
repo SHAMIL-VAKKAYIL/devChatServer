@@ -17,6 +17,19 @@ export const getUSersForSidebar = async (req, res) => {
 
     }
 }
+export const getSelectedUser = async (req, res) => {
+
+    try {
+        const { id: userId } = req.params
+        const user = await User.findById(userId).select('-password')
+
+        res.status(200).json(user)
+
+    } catch (error) {
+        console.error(error.message, 'Error in getting users')
+        res.status(500).json({ message: 'internal server error' })
+    }
+}
 
 export const getMessages = async (req, res) => {
     try {
@@ -57,7 +70,7 @@ export const sendMessages = async (req, res) => {
         // todo: realtime fuctionalty using socket.io
 
         res.status(200).json(newMessage)
-        
+
     } catch (error) {
 
         console.log('error in sending messages: ', error);
