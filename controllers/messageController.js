@@ -17,6 +17,7 @@ export const getUSersForSidebar = async (req, res) => {
 
     }
 }
+
 export const getSelectedUser = async (req, res) => {
 
     try {
@@ -33,14 +34,16 @@ export const getSelectedUser = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
+        
         const { id: userToChat } = req.params
         const myId = req.user._id
         const messages = await Message.find({
             $or: [
-                { senderId: myId, reciverId: userToChat },
-                { senderId: userToChat, reciverId: myId }
+                { senderId: myId, receiverId: userToChat },
+                { senderId: userToChat, receiverId: myId }
             ]
         })
+        
         res.status(200).json(messages)
 
     } catch (error) {
@@ -53,7 +56,7 @@ export const sendMessages = async (req, res) => {
     try {
         const { text, image } = req.body
         const { id: receiverId } = req.params
-        senderId = req.user._id
+        const senderId = req.user._id
 
         let imgUrl;
         if (image) {
@@ -62,12 +65,12 @@ export const sendMessages = async (req, res) => {
         }
         const newMessage = new Message({
             senderId,
-            reciverId: receiverId,
+            receiverId,
             text,
             image: imgUrl
         })
         await newMessage.save()
-        // todo: realtime fuctionalty using socket.io
+        // // todo: realtime fuctionalty using socket.io
 
         res.status(200).json(newMessage)
 
