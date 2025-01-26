@@ -67,7 +67,6 @@ export const logout = (req, res) => {
 
 
 export const updateProfile = async (req, res) => {
-    console.log(req.body);
 
     try {
         const { profilePic, email, fullname } = req.body
@@ -106,7 +105,6 @@ export const updateProfile = async (req, res) => {
 
 export const checkAuth = (req, res) => {
     try {
-        console.log(req.user);
         
         res.status(200).json(req.user)
 

@@ -1,6 +1,4 @@
 import express from 'express'
-import http from 'http'
-import { Server } from 'socket.io';
 import cors from 'cors'
 import mongoose from 'mongoose';
 import dotenv from 'dotenv'
@@ -11,11 +9,10 @@ import cookieParser from 'cookie-parser';
 // //! routers
 import authRoutes from './routes/authRouter.js'
 import messageRoutes from './routes/chatRouter.js'
-// const chatRouter = require('./routes/chatRouter')
-// const homeRouter = require('./routes/homeRouter')
+
+import { app,server,io } from './lib/socket.js';
 dotenv.config()
-const app = express();
-const server = http.createServer(app)
+
 
 
 
@@ -55,9 +52,6 @@ const PORT = process.env.PORT;
 
 
 
-// app.use('/auth', authRouter)
-// app.use('/chat', chatRouter)
-// app.use('/home', homeRouter)
 
 
 
