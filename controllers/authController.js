@@ -4,20 +4,17 @@ import User from "../models/user.model.js"
 import bcrypt from "bcryptjs"
 
 export const signup = async (req, res) => {
-    const { name, email, password } = req.body
+    const { fullname, email, password } = req.body
     try {
-        console.log(name, email, password);
 
         const exuser = await User.findOne({ email: email })
         if (exuser) {
-            console.log(exuser);
             return res.status(400).json('Email already exists')
         } else {
             const salt = await bcrypt.genSalt(10)
             const hashedpassword = await bcrypt.hash(password, salt)
-            console.log(hashedpassword, 'password hash');
 
-            const newUser = new User({ fullname: name, email, password: hashedpassword })
+            const newUser = new User({ fullname: fullname, email, password: hashedpassword })
             await newUser.save()
             return res.status(201).json({ message: 'User created successfully' });
         }
@@ -65,6 +62,20 @@ export const logout = (req, res) => {
     }
 }
 
+export const deleteAcc = async (req, res) => {
+    try {
+        const userId = req.user._id
+        console.log(userId);
+        await User.findByIdAndDelete(userId)
+        res.cookie("jwt", "", { maxAge: 0 })
+        res.json({ message: 'Account deleted successfully' })
+
+    } catch (error) {
+        res.status(404).json({ message: 'internal error' })
+
+    }
+}
+
 
 export const updateProfile = async (req, res) => {
 
@@ -105,7 +116,7 @@ export const updateProfile = async (req, res) => {
 
 export const checkAuth = (req, res) => {
     try {
-        
+
         res.status(200).json(req.user)
 
     } catch (error) {

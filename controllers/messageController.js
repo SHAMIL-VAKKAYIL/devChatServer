@@ -43,7 +43,7 @@ export const getMessages = async (req, res) => {
                 { senderId: userToChat, receiverId: myId }
             ]
         })
-
+        const details = await Message.find()
         res.status(200).json(messages)
 
     } catch (error) {
@@ -75,12 +75,22 @@ export const sendMessages = async (req, res) => {
         if (receiverSocketId) {
             io.to(receiverSocketId).emit('newMessage', newMessage)
         }
+
         res.status(200).json(newMessage)
 
     } catch (error) {
 
         console.log('error in sending messages: ', error);
         res.status(500).json({ message: 'internal server error' });
+
+    }
+}
+
+
+export const getGroup = () => {
+    try {
+
+    } catch (error) {
 
     }
 }
