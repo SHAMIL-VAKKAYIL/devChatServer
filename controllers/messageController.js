@@ -2,6 +2,7 @@ import { response } from "express"
 import cloudinary from "../lib/cloudinary.js"
 import Message from "../models/messageSchema.js"
 import User from "../models/user.model.js"
+import Group from "../models/chatroomSchema.js"
 import { getReciverSocketId, io } from "../lib/socket.js"
 
 
@@ -86,11 +87,67 @@ export const sendMessages = async (req, res) => {
     }
 }
 
+export const createGroup = async (req, res) => {
+    console.log(req.body);
 
-export const getGroup = () => {
+    const { grpName } = req.body
     try {
+        console.log(grpName);
+
+        const newGroup = new Group({
+            creator: req.user._id,
+            name: grpName,
+
+        })
+        await newGroup.save()
+        res.status(200).json(newGroup)
+
+    } catch (error) {
+        console.log(error.message);
+
+    }
+}
+
+export const getGroups = async (req, res) => {
+    try {
+        const groups = await Group.find()
+        res.status(200).json(groups)
+
+    } catch (error) {
+        res.status(500).json({ message: 'internal server error' })
+    }
+}
+export const getSelectedGroup = async (req, res) => {
+    console.log(req.params);
+    const { id: groupId } = req.params
+    try {
+        const selectedGroup = await Group.findOne({ _id: groupId })
+        res.status(200).json(selectedGroup)
 
     } catch (error) {
 
+    }
+}
+
+export const addmember = async (req, res) => {
+    const { id: groupId } = req.params
+    const { userId } = req.body
+    try {
+        const group = await Group.findByIdAndUpdate(groupId, { $push: { participants: userId } }, { new: true })
+        res.status(200).json(group)
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+export const removemember = async (req, res) => {
+    const { id: groupId } = req.params
+    const { userId } = req.body
+    try {
+        const group = await Group.findByIdAndUpdate(groupId, { $pull: { participants: userId } }, { new: true })
+        res.status(200).json(group)
+    } catch (error) {
+        console.log(error);
+        
     }
 }
