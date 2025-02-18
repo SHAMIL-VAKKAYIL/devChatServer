@@ -14,7 +14,6 @@ const messageSchema = new mongoose.Schema({
     receiverId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     },
     image: { type: String, required: false },
     text: { type: String, required: false },

@@ -17,7 +17,8 @@ const chatroomSchema = new mongoose.Schema({
     // isGroupchat: { type: Boolean, default: false },
     participants: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        unique: true
     }],
     createdDate: {
         type: Date,

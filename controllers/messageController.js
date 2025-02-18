@@ -33,19 +33,20 @@ export const getSelectedUser = async (req, res) => {
     }
 }
 
-export const getMessages = async (req, res) => {
+export const getUserMessages = async (req, res) => {
+    const { id: userToChat } = req.params
+    const senderId = req.user._id
     try {
 
-        const { id: userToChat } = req.params
-        const myId = req.user._id
+        if (!userToChat || !senderId) return
         const messages = await Message.find({
             $or: [
-                { senderId: myId, receiverId: userToChat },
-                { senderId: userToChat, receiverId: myId }
+                { senderId: senderId, receiverId: userToChat },
+                { senderId: userToChat, receiverId: senderId }
             ]
         })
-        const details = await Message.find()
         res.status(200).json(messages)
+
 
     } catch (error) {
         console.log(error.message, 'Error in getting messages')
@@ -53,26 +54,55 @@ export const getMessages = async (req, res) => {
     }
 }
 
-export const sendMessages = async (req, res) => {
+export const getGroupMessages = async (req, res) => {
+    const { id: GroupId } = req.params
     try {
-        const { text, image } = req.body
-        const { id: receiverId } = req.params
-        const senderId = req.user._id
+        if (!GroupId) return
+        const messages = await Message.find({ chatroom: GroupId })
+
+        res.status(200).json(messages)
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Internal server error' })
+    }
+}
+
+export const sendMessages = async (req, res) => {
+    const { messageData, UserId, GroupId } = req.body
+    const { text, image } = messageData
+    const senderId = req.user._id
+    try {
+
 
         let imgUrl;
         if (image) {
             const uploadResponse = await cloudinary.uploader.upload(image)
             imgUrl = uploadResponse.secure_url
         }
-        const newMessage = new Message({
+
+        const Messages = {
             senderId,
-            receiverId,
             text,
             image: imgUrl
-        })
-        await newMessage.save()
-        const receiverSocketId = getReciverSocketId(receiverId)
+        }
+        if (GroupId) {
+            Messages.chatroom = GroupId
+        }
+        if (UserId) {
+            Messages.receiverId = UserId
+        }
 
+        const newMessage = new Message(Messages)
+        await newMessage.save()
+
+
+        const receiverSocketId = getReciverSocketId(UserId)
+
+        if (GroupId) {
+            console.log(`Sending message to group: ${GroupId}`);
+            io.to(GroupId).emit('NewGrpMessage', newMessage)
+        }
         if (receiverSocketId) {
             io.to(receiverSocketId).emit('newMessage', newMessage)
         }
@@ -100,6 +130,8 @@ export const createGroup = async (req, res) => {
 
         })
         await newGroup.save()
+        await Group.findByIdAndUpdate(newGroup._id, { $push: { participants: req.user._id } }, { new: true })
+
         res.status(200).json(newGroup)
 
     } catch (error) {
@@ -117,6 +149,7 @@ export const getGroups = async (req, res) => {
         res.status(500).json({ message: 'internal server error' })
     }
 }
+
 export const getSelectedGroup = async (req, res) => {
     console.log(req.params);
     const { id: groupId } = req.params
@@ -129,12 +162,40 @@ export const getSelectedGroup = async (req, res) => {
     }
 }
 
+export const getmembers = async (req, res) => {
+    const { id: groupId } = req.params
+    try {
+        if (!groupId) {
+            return res.status(400).json({ message: 'Invalid data' })
+        }
+
+        const group = await Group.findById(groupId)
+        if (!group) return res.status(404).json({ message: 'Group not found' })
+
+        res.status(200).json(group.participants)
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ message: 'internal server error' });
+    }
+}
+
 export const addmember = async (req, res) => {
     const { id: groupId } = req.params
-    const { userId } = req.body
+    const { selectedUserID } = req.body
+    console.log(selectedUserID, groupId, 'gk');
+
     try {
-        const group = await Group.findByIdAndUpdate(groupId, { $push: { participants: userId } }, { new: true })
-        res.status(200).json(group)
+        if (!groupId || !selectedUserID) return res.status(400).json({ message: 'Invalid data' })
+        const group = await Group.findById(groupId)
+        if (group.participants.includes(selectedUserID)) return res.status(400).json({ message: 'alredy joined the group' })
+
+        const groupupdate = await Group.findByIdAndUpdate(groupId, { $push: { participants: selectedUserID } }, { new: true })
+
+        const user = await User.findOne({ _id: selectedUserID })
+
+        res.status(200).json({ message: `${user.fullname} joined the Group`, data: groupupdate })
+
+
 
     } catch (error) {
         console.log(error);
@@ -142,12 +203,15 @@ export const addmember = async (req, res) => {
 }
 export const removemember = async (req, res) => {
     const { id: groupId } = req.params
-    const { userId } = req.body
+    const { selectedUserID } = req.body
     try {
-        const group = await Group.findByIdAndUpdate(groupId, { $pull: { participants: userId } }, { new: true })
-        res.status(200).json(group)
+        if (!groupId || !selectedUserID) return res.status(400).json({ message: 'Invalid Data' })
+
+        const group = await Group.findByIdAndUpdate(groupId, { $pull: { participants: selectedUserID } }, { new: true })
+        const user = await User.findOneById(selectedUserID)
+        res.status(200).json({ message: `${user.fullname} left the Group`, data: group })
     } catch (error) {
         console.log(error);
-        
+
     }
 }
