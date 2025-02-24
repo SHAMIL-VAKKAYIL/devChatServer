@@ -1,6 +1,6 @@
 import express from 'express'
 import { protectRoute } from '../middlewares/auth.middleware.js'
-import { addmember, createGroup, getGroupMessages, getGroups, getmembers, getSelectedGroup, getSelectedUser, getUserMessages, getUSersForSidebar, removemember, sendMessages } from '../controllers/messageController.js'
+import { addmember, createGroup, getGroupMessages, getGroups, getmembers, getSelectedGroup, getSelectedUser, getUserMessages, getUSersForSidebar, removemember, searchContact, sendMessages } from '../controllers/messageController.js'
 
 const router = express.Router()
 
@@ -17,6 +17,8 @@ router.post('/creategroup', protectRoute, createGroup)
 router.post('/send', protectRoute, sendMessages)
 router.get('/groupmembers/:id', protectRoute, getmembers)
 router.post('/addmember/:id', protectRoute, addmember)
-router.post('/removemember/:id', protectRoute, removemember)
+router.put('/removemember/:id', protectRoute, removemember)
+
+router.get('/search', protectRoute, searchContact)
 
 export default router

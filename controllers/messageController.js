@@ -1,4 +1,3 @@
-import { response } from "express"
 import cloudinary from "../lib/cloudinary.js"
 import Message from "../models/messageSchema.js"
 import User from "../models/user.model.js"
@@ -170,6 +169,8 @@ export const getmembers = async (req, res) => {
         }
 
         const group = await Group.findById(groupId)
+
+
         if (!group) return res.status(404).json({ message: 'Group not found' })
 
         res.status(200).json(group.participants)
@@ -192,8 +193,10 @@ export const addmember = async (req, res) => {
         const groupupdate = await Group.findByIdAndUpdate(groupId, { $push: { participants: selectedUserID } }, { new: true })
 
         const user = await User.findOne({ _id: selectedUserID })
+        console.log(user);
 
-        res.status(200).json({ message: `${user.fullname} joined the Group`, data: groupupdate })
+
+        res.status(200).json({ message: `${user.userName} joined the Group`, data: groupupdate.participants })
 
 
 
@@ -204,12 +207,32 @@ export const addmember = async (req, res) => {
 export const removemember = async (req, res) => {
     const { id: groupId } = req.params
     const { selectedUserID } = req.body
+    console.log(selectedUserID);
+
     try {
         if (!groupId || !selectedUserID) return res.status(400).json({ message: 'Invalid Data' })
 
+        const user = await User.findById(selectedUserID)
+
         const group = await Group.findByIdAndUpdate(groupId, { $pull: { participants: selectedUserID } }, { new: true })
-        const user = await User.findOneById(selectedUserID)
-        res.status(200).json({ message: `${user.fullname} left the Group`, data: group })
+        if (!group) return res.status(404).json({ message: 'Group not found' })
+        res.status(200).json({ message: `${user.userName} left the Group`, data: group.participants })
+    } catch (error) {
+        console.log(error);
+
+    }
+}
+
+export const searchContact = async (req, res) => {
+    try {
+        const { query } = req.query
+        const users = await User.find({
+            $or: [
+                { userName: { $regex: query, $options: 'i' } },
+                { displayName: { $regex: query, $options: 'i' } }
+            ]
+        }).limit(10).select('-password')
+        res.status(200).json(users)
     } catch (error) {
         console.log(error);
 
