@@ -1,15 +1,17 @@
 import express from 'express'
 import { protectRoute } from '../middlewares/auth.middleware.js'
-import { addmember, createGroup, getGroupMessages, getGroups, getmembers, getSelectedGroup, getSelectedUser, getUserMessages, getUSersForSidebar, removemember, searchContact, sendMessages } from '../controllers/messageController.js'
+import { addmember, createGroup, deleteMessage, getGroupMessages, getGroups, getmembers, getSelectedGroup, getSelectedUser, getUserMessages, getUSersForSidebar, removemember, searchContact, sendMessages } from '../controllers/messageController.js'
 
 const router = express.Router()
 
 
 router.get('/users', protectRoute, getUSersForSidebar)
+
 router.get('/messages/:id', protectRoute, getUserMessages)
 router.get('/groupMessages/:id', protectRoute, getGroupMessages)
-router.get('/selected/:id', protectRoute, getSelectedUser)
+router.delete('/delmsg/:id',protectRoute,deleteMessage)
 
+router.get('/selected/:id', protectRoute, getSelectedUser)
 router.get('/group/:id', protectRoute, getSelectedGroup)
 router.get('/groups', protectRoute, getGroups)
 

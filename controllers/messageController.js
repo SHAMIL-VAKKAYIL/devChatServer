@@ -3,6 +3,7 @@ import Message from "../models/messageSchema.js"
 import User from "../models/user.model.js"
 import Group from "../models/chatroomSchema.js"
 import { getReciverSocketId, io } from "../lib/socket.js"
+import fs from 'fs'
 
 
 export const getUSersForSidebar = async (req, res) => {
@@ -76,9 +77,17 @@ export const sendMessages = async (req, res) => {
 
         let imgUrl;
         if (image) {
+
+            const { size } = fs.statSync(image)
+            const maxSize= 10*1024*1024
+            if(size > maxSize){
+                res.status(500).json({message:'image size must be less than 10 mb'})
+            }
+
             const uploadResponse = await cloudinary.uploader.upload(image)
             imgUrl = uploadResponse.secure_url
         }
+
 
         const Messages = {
             senderId,
@@ -113,6 +122,17 @@ export const sendMessages = async (req, res) => {
         console.log('error in sending messages: ', error);
         res.status(500).json({ message: 'internal server error' });
 
+    }
+}
+
+export const deleteMessage = async (req, res) => {
+    const { id } = req.params
+    try {
+        const delmsg = await Message.findByIdAndDelete(id)
+        res.json({ data: delmsg, message: 'message deleted successfully' })
+    } catch (error) {
+        console.log('error in deleting messages: ', error);
+        res.status(500).json({ message: 'internal server error' });
     }
 }
 
@@ -224,14 +244,21 @@ export const removemember = async (req, res) => {
 }
 
 export const searchContact = async (req, res) => {
+    const loggedInUser = req.user._id
     try {
         const { query } = req.query
         const users = await User.find({
-            $or: [
-                { userName: { $regex: query, $options: 'i' } },
-                { displayName: { $regex: query, $options: 'i' } }
+            $and: [
+                { _id: { $ne: loggedInUser } },
+                {
+                    $or: [
+                        { userName: { $regex: query, $options: 'i' } },
+                        { displayName: { $regex: query, $options: 'i' } }
+                    ]
+                }
             ]
         }).limit(10).select('-password')
+
         res.status(200).json(users)
     } catch (error) {
         console.log(error);
