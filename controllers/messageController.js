@@ -78,10 +78,13 @@ export const sendMessages = async (req, res) => {
         let imgUrl;
         if (image) {
 
-            const { size } = fs.statSync(image)
-            const maxSize= 10*1024*1024
-            if(size > maxSize){
-                res.status(500).json({message:'image size must be less than 10 mb'})
+            const base64Length = image.length - (image.indexOf(',') + 1); 
+            const size = (base64Length * 3) / 4; 
+            const maxSize = 10 * 1024 * 1024
+
+            if (size > maxSize) {
+                console.log(maxSize);
+                res.status(500).json({ message: 'image size must be less than 10 mb' })
             }
 
             const uploadResponse = await cloudinary.uploader.upload(image)
