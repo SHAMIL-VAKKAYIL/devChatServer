@@ -3,7 +3,6 @@ import Message from "../models/messageSchema.js"
 import User from "../models/user.model.js"
 import Group from "../models/chatroomSchema.js"
 import { getReciverSocketId, io } from "../lib/socket.js"
-import fs from 'fs'
 
 
 export const getUSersForSidebar = async (req, res) => {
